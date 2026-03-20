@@ -1,8 +1,11 @@
-FROM public.ecr.aws/awsguru/aws-lambda-web-adapter:0.8.3 AS adapter
 FROM python:3.12-slim
 
 WORKDIR /app
-COPY --from=adapter /lambda-adapter /opt/extensions/lambda-adapter
+
+RUN apt-get update && apt-get install -y curl && \
+    curl -Lo /opt/extensions/lambda-adapter https://github.com/awslabs/aws-lambda-web-adapter/releases/download/v0.8.4/lambda-adapter-x86_64 && \
+    chmod +x /opt/extensions/lambda-adapter && \
+    apt-get remove -y curl && apt-get autoremove -y && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
