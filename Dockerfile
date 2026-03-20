@@ -1,4 +1,4 @@
-FROM public.ecr.aws/awsguru/aws-lambda-web-adapter:0.8.4 AS adapter
+FROM public.ecr.aws/awsguru/aws-lambda-web-adapter:0.8.3 AS adapter
 FROM python:3.12-slim
 
 WORKDIR /app
