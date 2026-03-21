@@ -89,16 +89,6 @@ jobs:
             aws lambda wait function-active --function-name $LAMBDA_FUNCTION
           fi
 
-          # Add Lambda Web Adapter layer + set env vars
-          aws lambda wait function-updated --function-name $LAMBDA_FUNCTION 2>/dev/null || true
-          LAYER_ARN="arn:aws:lambda:${AWS_REGION}:753240598075:layer:LambdaAdapterLayerX86:24"
-          aws lambda update-function-configuration \
-            --function-name $LAMBDA_FUNCTION \
-            --layers "$LAYER_ARN" \
-            --timeout 300 \
-            --memory-size 256 \
-            --environment "Variables={MCP_TRANSPORT=sse,PORT=8080}"
-          aws lambda wait function-updated --function-name $LAMBDA_FUNCTION 2>/dev/null || true
 
       - name: Create Function URL with streaming
         run: |
