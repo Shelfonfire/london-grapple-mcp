@@ -2,4 +2,4 @@ mcp[cli]==1.19.0
 httpx>=0.28
 beautifulsoup4>=4.12
 lxml>=5.0
-uvicorn>=0.30
+mangum>=0.19.0

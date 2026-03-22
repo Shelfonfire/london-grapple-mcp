@@ -63,19 +63,12 @@ jobs:
           IMAGE_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPO:latest
           ROLE_ARN=arn:aws:iam::$AWS_ACCOUNT_ID:role/$LAMBDA_ROLE
 
-          # Check if function exists
           if aws lambda get-function --function-name $LAMBDA_FUNCTION 2>/dev/null; then
             echo "Updating existing function..."
             aws lambda update-function-code \
               --function-name $LAMBDA_FUNCTION \
               --image-uri $IMAGE_URI
-            # Wait for update to complete
             aws lambda wait function-updated --function-name $LAMBDA_FUNCTION
-            aws lambda update-function-configuration \
-              --function-name $LAMBDA_FUNCTION \
-              --timeout 300 \
-              --memory-size 256 \
-              --environment "Variables={MCP_TRANSPORT=streamable-http,PORT=8080}"
           else
             echo "Creating new function..."
             aws lambda create-function \
@@ -83,17 +76,18 @@ jobs:
               --package-type Image \
               --code ImageUri=$IMAGE_URI \
               --role $ROLE_ARN \
-              --timeout 300 \
-              --memory-size 256 \
-              --environment "Variables={MCP_TRANSPORT=streamable-http,PORT=8080}"
+              --timeout 30 \
+              --memory-size 256
             aws lambda wait function-active --function-name $LAMBDA_FUNCTION
           fi
 
-
-      - name: Create Function URL with streaming
+      - name: Configure Function URL
         run: |
           if aws lambda get-function-url-config --function-name $LAMBDA_FUNCTION 2>/dev/null; then
-            echo "Function URL already exists"
+            aws lambda update-function-url-config \
+              --function-name $LAMBDA_FUNCTION \
+              --auth-type NONE \
+              --invoke-mode BUFFERED
           else
             aws lambda add-permission \
               --function-name $LAMBDA_FUNCTION \
@@ -104,10 +98,7 @@ jobs:
             aws lambda create-function-url-config \
               --function-name $LAMBDA_FUNCTION \
               --auth-type NONE \
-              --invoke-mode RESPONSE_STREAM
+              --invoke-mode BUFFERED
           fi
-
-      - name: Print Function URL
-        run: |
           URL=$(aws lambda get-function-url-config --function-name $LAMBDA_FUNCTION --query 'FunctionUrl' --output text)
-          echo "Function URL: $URL"
+          echo "Function URL: ${URL}mcp"

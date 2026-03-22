@@ -9,7 +9,7 @@ from mcp.server.fastmcp import FastMCP
 import os
 
 port = int(os.environ.get("PORT", "8080"))
-mcp = FastMCP("london-grapple", port=port, host="0.0.0.0", stateless_http=True)
+mcp = FastMCP("london-grapple", port=port, host="0.0.0.0", stateless_http=True, json_response=True)
 
 MATS = {
     "1": {
