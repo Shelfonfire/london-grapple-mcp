@@ -83,18 +83,25 @@ jobs:
 
       - name: Configure Function URL
         run: |
+          # Ensure both permissions exist (required since Oct 2025)
+          aws lambda add-permission \
+            --function-name $LAMBDA_FUNCTION \
+            --statement-id FunctionURLAllowPublicAccess \
+            --action lambda:InvokeFunctionUrl \
+            --principal "*" \
+            --function-url-auth-type NONE 2>/dev/null || true
+          aws lambda add-permission \
+            --function-name $LAMBDA_FUNCTION \
+            --statement-id FunctionURLAllowInvoke \
+            --action lambda:InvokeFunction \
+            --principal "*" 2>/dev/null || true
+
           if aws lambda get-function-url-config --function-name $LAMBDA_FUNCTION 2>/dev/null; then
             aws lambda update-function-url-config \
               --function-name $LAMBDA_FUNCTION \
               --auth-type NONE \
               --invoke-mode BUFFERED
           else
-            aws lambda add-permission \
-              --function-name $LAMBDA_FUNCTION \
-              --statement-id FunctionURLPublicAccess \
-              --action lambda:InvokeFunctionUrl \
-              --principal "*" \
-              --function-url-auth-type NONE
             aws lambda create-function-url-config \
               --function-name $LAMBDA_FUNCTION \
               --auth-type NONE \
