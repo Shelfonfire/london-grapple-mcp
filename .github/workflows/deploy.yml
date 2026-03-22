@@ -75,7 +75,7 @@ jobs:
               --function-name $LAMBDA_FUNCTION \
               --timeout 300 \
               --memory-size 256 \
-              --environment "Variables={MCP_TRANSPORT=sse,PORT=8080}"
+              --environment "Variables={MCP_TRANSPORT=streamable-http,PORT=8080}"
           else
             echo "Creating new function..."
             aws lambda create-function \
@@ -85,7 +85,7 @@ jobs:
               --role $ROLE_ARN \
               --timeout 300 \
               --memory-size 256 \
-              --environment "Variables={MCP_TRANSPORT=sse,PORT=8080}"
+              --environment "Variables={MCP_TRANSPORT=streamable-http,PORT=8080}"
             aws lambda wait function-active --function-name $LAMBDA_FUNCTION
           fi
 
