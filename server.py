@@ -6,7 +6,10 @@ import httpx
 from bs4 import BeautifulSoup
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("london-grapple")
+import os
+
+port = int(os.environ.get("PORT", "8080"))
+mcp = FastMCP("london-grapple", port=port, host="0.0.0.0")
 
 MATS = {
     "1": {
@@ -150,10 +153,5 @@ async def search_classes(query: str) -> str:
 
 
 if __name__ == "__main__":
-    import os
     transport = os.environ.get("MCP_TRANSPORT", "stdio")
-    if transport == "sse":
-        port = int(os.environ.get("PORT", "8080"))
-        mcp.run(transport="sse")
-    else:
-        mcp.run()
+    mcp.run(transport=transport)

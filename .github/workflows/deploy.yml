@@ -73,7 +73,7 @@ jobs:
             aws lambda wait function-updated --function-name $LAMBDA_FUNCTION
             aws lambda update-function-configuration \
               --function-name $LAMBDA_FUNCTION \
-              --timeout 30 \
+              --timeout 300 \
               --memory-size 256 \
               --environment "Variables={MCP_TRANSPORT=sse,PORT=8080}"
           else
