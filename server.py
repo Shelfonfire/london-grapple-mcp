@@ -1,6 +1,6 @@
 import json
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 
 import httpx
 from bs4 import BeautifulSoup
@@ -21,6 +21,21 @@ MATS = {
         "url": "https://app.gymdesk.com/widgets/schedule/render/gym/D8eb1?visible_schedule=D8pqo&program=all&default_schedule=D8pqo",
     },
 }
+
+
+def _uk_today() -> date:
+    """Return today's date in UK time (handles GMT/BST)."""
+    now_utc = datetime.now(timezone.utc)
+    year = now_utc.year
+    mar_last_sun = 31 - (datetime(year, 3, 31).weekday() + 1) % 7
+    oct_last_sun = 31 - (datetime(year, 10, 31).weekday() + 1) % 7
+    bst_start = datetime(year, 3, mar_last_sun, 1, tzinfo=timezone.utc)
+    bst_end = datetime(year, 10, oct_last_sun, 1, tzinfo=timezone.utc)
+    offset = timedelta(hours=1) if bst_start <= now_utc < bst_end else timedelta(hours=0)
+    return (now_utc + offset).date()
+
+
+_cache: dict[str, tuple[date, list[dict]]] = {}
 
 
 def _parse_schedule(html: str, mat_key: str) -> list[dict]:
@@ -71,11 +86,18 @@ def _parse_schedule(html: str, mat_key: str) -> list[dict]:
 
 
 async def _fetch_mat(mat_key: str) -> list[dict]:
+    today = _uk_today()
+    cache_key = f"mat_{mat_key}"
+    cached = _cache.get(cache_key)
+    if cached and cached[0] == today:
+        return cached[1]
     url = MATS[mat_key]["url"]
     async with httpx.AsyncClient(timeout=15) as c:
         r = await c.get(url)
         r.raise_for_status()
-        return _parse_schedule(r.text, mat_key)
+        data = _parse_schedule(r.text, mat_key)
+    _cache[cache_key] = (today, data)
+    return data
 
 
 async def _fetch_all() -> list[dict]:
